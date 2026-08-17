@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>A Very Important Question 🦆</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%86%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#4C8D93;
+    --teal-deep:#3B7379;
+    --duck-body:#FDC002;
+    --ink:#2A2622;
+    --card:#FFF7E9;
+    --accent-pink:#FF7096;
+    --cream:#FFF7E9;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Quicksand',sans-serif;
+    color:var(--ink);
+    background:#FFFFFF;
+    overflow-x:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;background:none;border:none;padding:0;color:inherit;-webkit-tap-highlight-color:transparent;}
+
+  .page{ display:none; min-height:100vh; min-height:100svh; width:100%; background:#FFFFFF; }
+  .page.active{ display:flex; flex-direction:column; }
+
+  .headline{ text-align:center; padding:6vh 1.25rem 1rem; flex:0 0 auto; }
+  .eyebrow{
+    letter-spacing:.18em; text-transform:uppercase; font-size:.72rem; font-weight:700;
+    color:var(--teal); opacity:.75; margin:0 0 .5rem;
+  }
+  h1{
+    font-family:'Baloo 2',cursive; font-weight:800;
+    font-size:clamp(1.7rem, 5vw, 3rem);
+    margin:0; color:var(--teal);
+    text-shadow:0 2px 0 rgba(0,0,0,0.06);
+  }
+
+  .duck-field{
+    position:relative;
+    flex:1 1 auto;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+    min-height:50vh;
+  }
+  .duck-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .duck{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+  }
+  .duck svg, .duck img{ display:block; width:100%; height:100%; }
+  .duck.pop{ transform:scale(1.18,0.86); }
+
+  .duck-label{
+    position:absolute;
+    top:60%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-family:'Baloo 2',cursive;
+    font-weight:800;
+    font-size:clamp(.68rem, 2.4vw, .95rem);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    white-space:nowrap;
+    pointer-events:none;
+    text-shadow:
+      0 0 5px var(--cream), 0 0 5px var(--cream),
+      1px 1px 0 var(--cream), -1px -1px 0 var(--cream),
+      1px -1px 0 var(--cream), -1px 1px 0 var(--cream);
+  }
+  .duck[data-role="yes"] .duck-label{ color:#1C7A4A; }
+  .duck[data-role="no"] .duck-label{ color:var(--accent-pink); }
+
+  .hint{
+    text-align:center; font-weight:600; color:var(--teal); opacity:.9;
+    padding:0 1rem 4vh; flex:0 0 auto; min-height:1.4em;
+  }
+
+  /* ---------- Calendar page ---------- */
+  .cal-wrap{ flex:1 1 auto; display:flex; align-items:flex-start; justify-content:center; padding:2vh 1rem 6vh; }
+  .cal-card{
+    background:var(--card); border-radius:24px; padding:1.6rem 1.5rem 1.8rem;
+    width:100%; max-width:380px; box-shadow:0 12px 30px rgba(0,0,0,0.25);
+  }
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+  .cal-nav button{
+    font-family:'Baloo 2',cursive; font-size:1.4rem; width:2.2rem; height:2.2rem;
+    border-radius:50%; background:#FFE9C4; color:#5A2E0C;
+  }
+  .cal-nav button:hover{ background:#FFD98A; }
+  .cal-month{ font-family:'Baloo 2',cursive; font-weight:700; font-size:1.2rem; color:#5A2E0C; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:.35rem; }
+  .cal-dow{ text-align:center; font-size:.68rem; font-weight:700; color:#8A6A46; text-transform:uppercase; letter-spacing:.05em; }
+  .cal-day{
+    aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    border-radius:12px; font-weight:600; font-size:.92rem; color:var(--ink); position:relative;
+  }
+  .cal-day.pad{ visibility:hidden; }
+  .cal-day.selectable:hover{ background:#FFE9C4; }
+  .cal-day.today{ box-shadow:inset 0 0 0 2px var(--accent-pink); }
+  .cal-day.selected{ background:var(--duck-body); color:#5A2E0C; font-weight:800; }
+  .cal-day.selected::after{ content:"🦆"; position:absolute; top:-14px; font-size:1.05rem; }
+
+  .confirm-row{ margin-top:1.4rem; text-align:center; }
+  #confirmBtn{
+    font-family:'Baloo 2',cursive; font-weight:700; font-size:1.02rem;
+    background:var(--accent-pink); color:white; padding:.7em 1.6em; border-radius:999px;
+    box-shadow:0 6px 0 #C94E70; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  #confirmBtn:disabled{ background:#D8D0C6; box-shadow:0 6px 0 #B8B0A6; cursor:not-allowed; }
+  #confirmBtn:not(:disabled):hover{ transform:translateY(-2px); }
+  #confirmBtn:not(:disabled):active{ transform:translateY(3px); box-shadow:0 3px 0 #C94E70; }
+
+  .selected-readout{ text-align:center; font-weight:600; color:#5A2E0C; min-height:1.4em; margin-top:.6rem; font-size:.88rem; }
+
+  .celebrate{ display:none; text-align:center; padding:4vh 1.5rem; flex:1 1 auto; }
+  .celebrate.active{ display:block; }
+  .celebrate h2{ font-family:'Baloo 2',cursive; font-size:clamp(1.6rem,5vw,2.6rem); color:var(--teal); margin-bottom:.3rem; }
+  .celebrate p{ font-weight:600; color:var(--teal); opacity:.95; }
+  .celebrate-ducks{ font-size:2.2rem; margin-top:1rem; letter-spacing:.3rem; }
+
+  @media (prefers-reduced-motion: reduce){
+    .duck{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- PAGE 1: the ask -->
+  <section id="page-ask" class="page active">
+    <header class="headline">
+      <p class="eyebrow">a very important question</p>
+      <h1 id="askHeadline">Will you go out with me?</h1>
+    </header>
+    <div class="duck-field" id="duckField"></div>
+    <p class="hint" id="hintText">tap a duck to find out what it says 🦆</p>
+  </section>
+
+  <!-- PAGE 2: pick a date -->
+  <section id="page-calendar" class="page">
+    <header class="headline">
+      <p class="eyebrow">yay! she said yes</p>
+      <h1>Pick a day 🦆</h1>
+    </header>
+    <div class="cal-wrap">
+      <div class="cal-card">
+        <div class="cal-nav">
+          <button id="prevMonth" aria-label="previous month">‹</button>
+          <span class="cal-month" id="calMonthLabel"></span>
+          <button id="nextMonth" aria-label="next month">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <p class="selected-readout" id="selectedReadout">no date chosen yet</p>
+        <div class="confirm-row">
+          <button id="confirmBtn" disabled>Confirm date 🦆</button>
+        </div>
+      </div>
+    </div>
+    <div class="celebrate" id="celebrate">
+      <h2>It's a date!</h2>
+      <p id="finalMessage"></p>
+      <div class="celebrate-ducks">🦆🦆🦆🦆🦆</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ====== EASY TO CUSTOMIZE ====== */
+const HEADLINE_TEXT = "Will you go out with me?"; // edit this if you like, e.g. add her name
+/* ================================ */
+document.getElementById('askHeadline').textContent = HEADLINE_TEXT;
+
+/* ---------- sound: real squishy rubber duck squeak ---------- */
+const SQUEAK_SRC = './rubber-duck-squeak.mp3';
+function squeak(pitch = 1){
+  try{
+    const a = new Audio(SQUEAK_SRC);
+    a.volume = 0.9;
+    a.playbackRate = Math.min(3, Math.max(0.6, pitch)); // slight pitch variety between ducks
+    a.play().catch(() => {});
+  }catch(e){ /* audio unavailable, fail silently */ }
+}
+
+/* ---------- duck artwork: your rubber duck image, never rotated ---------- */
+function duckSVG(){
+  return `<img src="./duck.png" alt="a duck" draggable="false" style="width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;">`;
+}
+
+/* ---------- responsive staggered duck grid ---------- */
+const field = document.getElementById('duckField');
+let yesEl = null, noEl = null, noClicks = 0;
+
+function duckSize(){
+  const w = window.innerWidth;
+  if (w < 480) return 58;
+  if (w < 900) return 72;
+  return 88;
+}
+
+function buildField(){
+  field.innerHTML = '';
+  const size = duckSize();
+  const colWidth = size * 1.25;
+  const rowStep = size * 1.15;
+  const offset = rowStep / 2;
+  const fieldW = field.clientWidth || window.innerWidth;
+  const fieldH = field.clientHeight || window.innerHeight * 0.5;
+
+  const numCols = Math.max(3, Math.floor(fieldW / colWidth));
+  const numRows = Math.ceil(fieldH / rowStep) + 2;
+
+  const allDucks = [];
+
+  for (let c = 0; c < numCols; c++){
+    const col = document.createElement('div');
+    col.className = 'duck-col';
+    col.style.width = colWidth + 'px';
+    col.style.gap = (rowStep - size) + 'px';
+    if (c % 2 === 1) col.style.marginTop = offset + 'px';
+
+    for (let r = 0; r < numRows; r++){
+      const d = document.createElement('button');
+      d.className = 'duck';
+      d.style.width = size + 'px';
+      d.style.height = size + 'px';
+      d.innerHTML = duckSVG();
+      d.setAttribute('aria-label', 'a duck');
+      col.appendChild(d);
+      allDucks.push(d);
+    }
+    field.appendChild(col);
+  }
+
+  // pick two central-ish ducks for yes / no
+  const mid = Math.floor(allDucks.length / 2);
+  const yesIndex = mid - 1 >= 0 ? mid - 1 : 0;
+  let noIndex = mid + 1 < allDucks.length ? mid + 1 : allDucks.length - 1;
+  if (noIndex === yesIndex && allDucks.length > 1) noIndex = (yesIndex + 1) % allDucks.length;
+
+  setRole(allDucks[yesIndex], 'yes');
+  setRole(allDucks[noIndex], 'no');
+}
+
+function setRole(el, role){
+  if (!el) return;
+  el.dataset.role = role;
+  const label = document.createElement('span');
+  label.className = 'duck-label';
+  label.textContent = role;
+  el.appendChild(label);
+  if (role === 'yes') yesEl = el;
+  if (role === 'no') noEl = el;
+}
+
+function clearRole(el){
+  if (!el) return;
+  delete el.dataset.role;
+  const label = el.querySelector('.duck-label');
+  if (label) label.remove();
+}
+
+field.addEventListener('click', (e) => {
+  const duck = e.target.closest('.duck');
+  if (!duck) return;
+
+  duck.classList.remove('pop');
+  void duck.offsetWidth;
+  duck.classList.add('pop');
+  setTimeout(() => duck.classList.remove('pop'), 200);
+
+  const role = duck.dataset.role;
+  if (role === 'yes'){
+    squeak(1.15); setTimeout(() => squeak(1.5), 140);
+    setTimeout(goToCalendar, 350);
+  } else if (role === 'no'){
+    squeak(0.7);
+    noClicks++;
+    const allDucks = Array.from(field.querySelectorAll('.duck'));
+    const eligible = allDucks.filter(d => d !== duck && d.dataset.role !== 'yes');
+    if (eligible.length){
+      const next = eligible[Math.floor(Math.random() * eligible.length)];
+      clearRole(duck);
+      setRole(next, 'no');
+    }
+    const hints = ["it jumped to another duck! 🦆","the 'no' ran away!","try to catch it, if you dare","that duck's not sticking around"];
+    document.getElementById('hintText').textContent = hints[noClicks % hints.length];
+  } else {
+    squeak(0.85 + Math.random() * 0.3);
+  }
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    noClicks = 0;
+    buildField();
+  }, 250);
+});
+
+/* ---------- page switching ---------- */
+function goToCalendar(){
+  document.getElementById('page-ask').classList.remove('active');
+  document.getElementById('page-calendar').classList.add('active');
+  renderCalendar();
+}
+
+/* ---------- calendar page ---------- */
+let viewDate = new Date();
+viewDate.setDate(1);
+let selectedDate = null;
+const today = new Date();
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOW = ["S","M","T","W","T","F","S"];
+
+function renderCalendar(){
+  document.getElementById('calMonthLabel').textContent = `${MONTH_NAMES[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  DOW.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const startPad = firstDay.getDay();
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+
+  for (let i = 0; i < startPad; i++){
+    const pad = document.createElement('div');
+    pad.className = 'cal-day pad';
+    grid.appendChild(pad);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++){
+    const cell = document.createElement('button');
+    const cellDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    cell.className = 'cal-day selectable';
+    cell.textContent = day;
+
+    if (isSameDay(cellDate, today)) cell.classList.add('today');
+    if (selectedDate && isSameDay(cellDate, selectedDate)) cell.classList.add('selected');
+
+    cell.addEventListener('click', () => {
+      selectedDate = cellDate;
+      squeak(1.0);
+      renderCalendar();
+      document.getElementById('confirmBtn').disabled = false;
+      document.getElementById('selectedReadout').textContent =
+        `${cellDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})} 🦆`;
+    });
+    grid.appendChild(cell);
+  }
+}
+
+function isSameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  viewDate.setMonth(viewDate.getMonth() - 1);
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  viewDate.setMonth(viewDate.getMonth() + 1);
+  renderCalendar();
+});
+document.getElementById('confirmBtn').addEventListener('click', () => {
+  if (!selectedDate) return;
+  squeak(1.2); setTimeout(()=>squeak(1.6),150); setTimeout(()=>squeak(1.9),300);
+  document.querySelector('.cal-wrap').style.display = 'none';
+  const celebrate = document.getElementById('celebrate');
+  celebrate.classList.add('active');
+  document.getElementById('finalMessage').textContent =
+    `Can't wait to see you on ${selectedDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}.`;
+});
+
+/* ---------- init ---------- */
+buildField();
+</script>
+</body>
+</html>
