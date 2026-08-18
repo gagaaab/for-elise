@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>A Very Important Question 🦆</title>
+<title>Coffee?</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%86%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;}
+  html,body{margin:0;padding:0;height:100%;overscroll-behavior-y:none;}
   body{
     font-family:'Quicksand',sans-serif;
     color:var(--ink);
@@ -62,10 +62,16 @@
     position:relative;
     display:flex; align-items:center; justify-content:center;
     flex:0 0 auto;
+  }
+  .duck-rot{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .duck-rot svg, .duck-rot img{
+    display:block; width:100%; height:100%;
     transition:transform .18s cubic-bezier(.34,1.56,.64,1);
   }
-  .duck svg, .duck img{ display:block; width:100%; height:100%; }
-  .duck.pop{ transform:scale(1.18,0.86); }
+  .duck.pop .duck-rot svg, .duck.pop .duck-rot img{ transform:scale(1.18,0.86); }
 
   .duck-label{
     position:absolute;
@@ -127,7 +133,22 @@
   #confirmBtn:not(:disabled):hover{ transform:translateY(-2px); }
   #confirmBtn:not(:disabled):active{ transform:translateY(3px); box-shadow:0 3px 0 #C94E70; }
 
-  .selected-readout{ text-align:center; font-weight:600; color:#5A2E0C; min-height:1.4em; margin-top:.6rem; font-size:.88rem; }
+  .time-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:1.1rem; padding-top:1rem;
+    border-top:1px dashed var(--accent-line, rgba(42,38,34,0.15));
+  }
+  .time-label{
+    font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; color:#5A2E0C;
+  }
+  .time-input{
+    font-family:'Quicksand',sans-serif; font-weight:700; font-size:1rem;
+    border:2px solid #FFE9C4; background:#FFFBF3; color:var(--ink);
+    border-radius:10px; padding:.4em .6em; cursor:pointer;
+  }
+  .time-input:focus{ outline:none; border-color:var(--duck-body); }
+
+  .selected-readout{ text-align:center; font-weight:600; color:#5A2E0C; min-height:1.4em; margin-top:.8rem; font-size:.88rem; }
 
   .celebrate{ display:none; text-align:center; padding:4vh 1.5rem; flex:1 1 auto; }
   .celebrate.active{ display:block; }
@@ -147,7 +168,7 @@
   <!-- PAGE 1: the ask -->
   <section id="page-ask" class="page active">
     <header class="headline">
-      <p class="eyebrow">a very important question</p>
+      <p class="eyebrow">Hi, Elise!</p>
       <h1 id="askHeadline">Will you go out with me?</h1>
     </header>
     <div class="duck-field" id="duckField"></div>
@@ -158,7 +179,7 @@
   <section id="page-calendar" class="page">
     <header class="headline">
       <p class="eyebrow">yay! she said yes</p>
-      <h1>Pick a day 🦆</h1>
+      <h1>Pick a day &amp; time 🦆</h1>
     </header>
     <div class="cal-wrap">
       <div class="cal-card">
@@ -168,9 +189,15 @@
           <button id="nextMonth" aria-label="next month">›</button>
         </div>
         <div class="cal-grid" id="calGrid"></div>
+
+        <div class="time-row">
+          <label for="timeInput" class="time-label">What time? 🕐</label>
+          <input type="time" id="timeInput" class="time-input">
+        </div>
+
         <p class="selected-readout" id="selectedReadout">no date chosen yet</p>
         <div class="confirm-row">
-          <button id="confirmBtn" disabled>Confirm date 🦆</button>
+          <button id="confirmBtn" disabled>Confirm 🦆</button>
         </div>
       </div>
     </div>
@@ -242,7 +269,9 @@ function buildField(){
       d.className = 'duck';
       d.style.width = size + 'px';
       d.style.height = size + 'px';
-      d.innerHTML = duckSVG();
+      const angle = (Math.random() * 24 - 12).toFixed(1); // slight tilt, -12deg to 12deg
+      const flip = Math.random() < 0.5 ? -1 : 1; // face left or right
+      d.innerHTML = `<span class="duck-rot" style="transform:rotate(${angle}deg) scaleX(${flip})">${duckSVG()}</span>`;
       d.setAttribute('aria-label', 'a duck');
       col.appendChild(d);
       allDucks.push(d);
@@ -309,9 +338,12 @@ field.addEventListener('click', (e) => {
 });
 
 let resizeTimer;
+let lastWidth = window.innerWidth;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
+    if (window.innerWidth === lastWidth) return; // height-only change (e.g. mobile address bar) — ignore
+    lastWidth = window.innerWidth;
     noClicks = 0;
     buildField();
   }, 250);
@@ -328,10 +360,39 @@ function goToCalendar(){
 let viewDate = new Date();
 viewDate.setDate(1);
 let selectedDate = null;
+let selectedTime = null; // "HH:MM" 24h string from the time input
 const today = new Date();
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOW = ["S","M","T","W","T","F","S"];
+
+function formatTime12h(hhmm){
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = ((h + 11) % 12) + 1;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+
+function updateReadout(){
+  const readout = document.getElementById('selectedReadout');
+  const confirmBtn = document.getElementById('confirmBtn');
+  if (selectedDate && selectedTime){
+    readout.textContent = `${selectedDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})} at ${formatTime12h(selectedTime)} 🦆`;
+    confirmBtn.disabled = false;
+  } else if (selectedDate){
+    readout.textContent = `${selectedDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})} — now pick a time`;
+    confirmBtn.disabled = true;
+  } else {
+    readout.textContent = 'no date chosen yet';
+    confirmBtn.disabled = true;
+  }
+}
+
+document.getElementById('timeInput').addEventListener('change', (e) => {
+  selectedTime = e.target.value || null;
+  if (selectedTime) squeak(1.0);
+  updateReadout();
+});
 
 function renderCalendar(){
   document.getElementById('calMonthLabel').textContent = `${MONTH_NAMES[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
@@ -368,9 +429,7 @@ function renderCalendar(){
       selectedDate = cellDate;
       squeak(1.0);
       renderCalendar();
-      document.getElementById('confirmBtn').disabled = false;
-      document.getElementById('selectedReadout').textContent =
-        `${cellDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})} 🦆`;
+      updateReadout();
     });
     grid.appendChild(cell);
   }
@@ -388,14 +447,47 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   viewDate.setMonth(viewDate.getMonth() + 1);
   renderCalendar();
 });
+/* ====== EMAIL NOTIFICATION SETUP ======
+   1. Go to https://formspree.io and sign up free (no credit card).
+   2. Create a new form — it'll give you an endpoint that looks like:
+      https://formspree.io/f/abcdwxyz
+   3. Paste that URL below, replacing the placeholder.
+   4. The FIRST submission triggers a confirmation email to you from
+      Formspree — you must click "confirm" in that email once before
+      later submissions actually get delivered to your inbox.
+   Free tier = 50 submissions/month, plenty for this. ================= */
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/moeapqoy";
+
+function notifyByEmail(dateText, timeText){
+  if (!FORMSPREE_ENDPOINT.includes('formspree.io/f/') || FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')) {
+    console.warn('Formspree endpoint not set yet — skipping email notification.');
+    return;
+  }
+  fetch(FORMSPREE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' },
+    body: (() => {
+      const fd = new FormData();
+      fd.append('_subject', 'She picked a date! 🦆');
+      fd.append('message', `She said yes! Date: ${dateText} — Time: ${timeText}`);
+      fd.append('date', dateText);
+      fd.append('time', timeText);
+      return fd;
+    })()
+  }).catch(err => console.warn('Email notification failed to send:', err));
+}
+
 document.getElementById('confirmBtn').addEventListener('click', () => {
-  if (!selectedDate) return;
+  if (!selectedDate || !selectedTime) return;
   squeak(1.2); setTimeout(()=>squeak(1.6),150); setTimeout(()=>squeak(1.9),300);
   document.querySelector('.cal-wrap').style.display = 'none';
   const celebrate = document.getElementById('celebrate');
   celebrate.classList.add('active');
+  const dateText = selectedDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  const timeText = formatTime12h(selectedTime);
   document.getElementById('finalMessage').textContent =
-    `Can't wait to see you on ${selectedDate.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}.`;
+    `Can't wait to see you on ${dateText} at ${timeText}.`;
+  notifyByEmail(dateText, timeText);
 });
 
 /* ---------- init ---------- */
